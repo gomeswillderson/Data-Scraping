@@ -1,5 +1,6 @@
 import time
 import requests
+from bs4 import BeautifulSoup
 
 
 def fetch(url: str) -> str:
@@ -26,9 +27,19 @@ def fetch(url: str) -> str:
         return None
 
 
-# Requisito 2
-def scrape_updates(html_content):
-    """Seu código deve vir aqui"""
+def scrape_updates(html_content: str) -> list:
+    """
+    Extrai uma lista de URLs de atualizações da página de novidades da Trybe.
+
+    Args:
+        html_content (str): O conteúdo HTML da página de novidades da Trybe.
+
+    Returns:
+        list: Uma lista de URLs de atualizações encontrados na página.
+    """
+    soup = BeautifulSoup(html_content, "html.parser")
+    news_links = soup.find_all("a", class_="cs-overlay-link")
+    return [link["href"] for link in news_links]
 
 
 # Requisito 3
