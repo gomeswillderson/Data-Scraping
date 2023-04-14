@@ -1,6 +1,7 @@
 import time
 import requests
 from bs4 import BeautifulSoup
+from typing import Optional
 
 
 def fetch(url: str) -> str:
@@ -42,9 +43,24 @@ def scrape_updates(html_content: str) -> list:
     return [link["href"] for link in news_links]
 
 
-# Requisito 3
-def scrape_next_page_link(html_content):
-    """Seu código deve vir aqui"""
+def scrape_next_page_link(html_content: str) -> Optional[str]:
+    """
+    Faz o scrape do conteúdo HTML de uma página de novidades para
+    obter a URL da próxima página.
+
+    Parâmetros:
+        html_content (str): Conteúdo HTML da página de novidades.
+
+    Retorna:
+        str ou None: URL da próxima página, caso exista,
+        ou None, caso contrário.
+    """
+    soup = BeautifulSoup(html_content, "html.parser")
+    next_page = soup.find("a", class_="next page-numbers")
+    if next_page:
+        return next_page["href"]
+    else:
+        return None
 
 
 # Requisito 4
