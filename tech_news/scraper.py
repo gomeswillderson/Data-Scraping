@@ -1,8 +1,9 @@
 import time
 import requests
 from bs4 import BeautifulSoup
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
+from tech_news.database import create_news
 
 
 def fetch(url: str) -> str:
@@ -81,7 +82,7 @@ def scrape_news(html_content):
     news = {}
     url = soup.find("link", {"rel": "canonical"})["href"]
 
-    # Check for news date and reading time in a specific class
+    # Verifique a data das notícias e o horário de leitura
     meta_date = soup.find("li", {"class": ["meta-date", "post-modified-info"]})
     if meta_date:
         news_date = meta_date.text.split(" ")[0]
@@ -96,7 +97,7 @@ def scrape_news(html_content):
 
         news["category"] = soup.find("span", {"class": "label"}).text
     else:
-        # Check for reading time in a specific meta tag
+        # Verifique o tempo de leitura em uma tag específica
         reading_time = soup.find(
             "meta",
             {
@@ -109,7 +110,7 @@ def scrape_news(html_content):
             reading_time = reading_time["content"].split(" ")[0]
             news["reading_time"] = int(reading_time)
 
-        # Check for news date in a specific class
+        # Verifique a data de notícias em uma classe específica
         news_date = soup.find("div", {"class": "topic-page-title-meta"})
         if news_date:
             news_date = news_date.text.replace("Última atualização", "")
@@ -118,10 +119,10 @@ def scrape_news(html_content):
                 "%d/%m/%Y"
             )
 
-        # Extract category from URL
+        # Extrair categoria do URL
         news["category"] = url.split("/")[3].title()
 
-    # Extract remaining news information
+    # Extrair informações de notícias restantes
     news["url"] = url
     news["title"] = soup.find("h1", {"class": "entry-title"}).text.strip()
     news["writer"] = soup.find("a", {"class": "url fn n"}).text
@@ -132,6 +133,37 @@ def scrape_news(html_content):
     return news
 
 
-# Requisito 5
-def get_tech_news(amount):
-    """Seu código deve vir aqui"""
+def get_tech_news(amount: int) -> List[str]:
+    """
+    Obtém notícias de tecnologia do blog da Trybe.
+
+    Args:
+        amount (int): Quantidade de notícias a serem obtidas.
+
+    Returns:
+        List[str]: Lista contendo as notícias obtidas.
+    """
+    url = "https://blog.betrybe.com"
+    scraper = []
+
+    # Obter links das atualizações do blog
+    html_content = fetch(url)
+    get_all_links = scrape_updates(html_content)
+
+    # Obter mais links até atingir a quantidade desejada
+    while len(get_all_links) < amount:
+        next_page = scrape_next_page_link(html_content)
+        html_content = fetch(next_page)
+        get_page_links = scrape_updates(html_content)
+        get_all_links.extend(get_page_links)
+
+    # Extrair notícias a partir dos links obtidos
+    for link in get_all_links[:amount]:
+        html_content = fetch(link)
+        scraper.append(scrape_news(html_content))
+
+    # Criar notícias
+    create_news(scraper)
+
+    # Retornar as notícias extraídas
+    return scraper
