@@ -51,6 +51,17 @@ def search_by_date(date: str) -> list[tuple[str, str]]:
     return news_by_date
 
 
-# Requisito 9
-def search_by_category(category):
-    """Seu código deve vir aqui"""
+def search_by_category(category: str) -> List[Tuple[str, str]]:
+    """Busca as notícias de uma determinada categoria.
+
+    Args:
+        category: Categoria a ser buscada.
+
+    Returns:
+        Uma lista de tuplas contendo o título e a URL
+        de cada notícia encontrada.
+    """
+    regex_query = {"category": {"$regex": category, '$options': 'i'}}
+    news_found = search_news(regex_query)
+    news_info = [(news["title"], news["url"]) for news in news_found]
+    return news_info
